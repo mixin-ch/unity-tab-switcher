@@ -6,81 +6,94 @@ using UnityEngine.UI;
 
 namespace Mixin
 {
+    [ExecuteInEditMode]
     public class TabSwitcher : MonoBehaviour
     {
-        [Header("Colors")]
-        [SerializeField] private Color ActiveColor = Color.white;
-        [SerializeField] private Color InactiveColor = new Color(1f, 1f, 1f, 0.7f);
+        [SerializeField] private bool _autoInit = true;
+        [SerializeField] private bool _autoAddButtons = true;
+        [SerializeField] private bool _allowClickActivePage = true;
+        [SerializeField] private bool _ignorePageObjects = false;
+        [SerializeField] private TabColors _tabColors;
 
-        [SerializeField] private bool IgnorePageObjects = false;
+        public UnityEvent<TabSwitchButton> OnTabSwitched;
 
-        [Space]
-        [SerializeField] private List<TabSwitchElement> TabSwitchElementList;
+        [Header("Optional")]
+        [SerializeField] private List<TabSwitchButton> _tabSwitchElementList;
 
-        [Space]
-        private List<Page> PageList;
+        private TabSwitchButton _activePage;
 
-        // Obsolete
-        public UnityEvent<Page> OnTabSwitch;
+        public TabSwitchButton ActivePage { get => _activePage; }
 
-        public static event UnityAction<Page> OnTabSwitched;
-
-        //[ReadOnly]
-        private Page ActivePage;
 
         private void Awake()
         {
-            Setup();
+            if (_autoInit)
+            {
+                Setup();
+            }
         }
 
         private void Setup()
         {
-            // if he uses the TabSwitchElement, then add these pages to PageList
-            if (TabSwitchElementList != null)
-                foreach (TabSwitchElement tabSwitchElement in TabSwitchElementList)
-                    PageList.Add(tabSwitchElement.Page);
-
-            // check if user wants to use the all in one feature
-            if (PageList != null)
+            if (_autoAddButtons)
             {
-                foreach (Page page in PageList)
-                {
-                    // add button listeners
-                    page.ButtonForSwitch.onClick.AddListener(() =>
-                    {
-                        SwitchToPage(page);
-                    });
+                _tabSwitchElementList.Clear();
 
+                TabSwitchButton[] foundButtons = transform.GetComponentsInChildren<TabSwitchButton>();
+                foreach (TabSwitchButton button in foundButtons)
+                {
+                    _tabSwitchElementList.Add(button);
                 }
-                // activate first page
-                SwitchToPage(PageList[0]);
             }
+
+            // If there are no Buttons, then return
+            if (_tabSwitchElementList.Count == 0)
+            {
+                "Setup failed: No Tab Switch Element added".Log();
+                return;
+            }
+
+            foreach (TabSwitchButton button in _tabSwitchElementList)
+            {
+                button.Setup();
+
+                // add button listeners
+                button.Button.onClick.AddListener(() =>
+                {
+                    SwitchToPage(button);
+                });
+
+                // Define the Colors
+                button.DefineColors(_tabColors);
+            }
+
+            // activate first page
+            SwitchToPage(_tabSwitchElementList[0]);
+
         }
 
-        public void SwitchToPage(Page page)
+        public void SwitchToPage(TabSwitchButton page)
         {
-            //if (page == ActivePage)
-            //    return;
+            if (!_allowClickActivePage)
+            {
+                // If already on this Page, then return
+                if (page == _activePage)
+                    return;
+            }
 
-            //$"Switching to Page {page.Name}".Log(Color.yellow);
+            $"Switching Page...".Log(Color.yellow);
 
             // disable all pages
             DeactivateAllPages();
 
             // activate page
-            if (!IgnorePageObjects)
+            if (!_ignorePageObjects)
                 page.PageObject.SetActive(true);
 
-            // set color
-            page.BackgroundToHighlight.color = ActiveColor;
-            if (page.CustomColor)
-                page.BackgroundToHighlight.color = page.ActiveColor;
-
             // set current active page
-            ActivePage = page;
-
-            // call general on tab switch methods
-            OnTabSwitch?.Invoke(page);
+            _activePage = page;
+            page.IsActive = true;
+            page.SetColorAuto();
 
             // Fire Event
             OnTabSwitched?.Invoke(page);
@@ -89,60 +102,43 @@ namespace Mixin
             page.OnTabSwitch?.Invoke();
         }
 
-        private void DeactivatePage(Page page)
-        {
-            //deactivate page
-            if (!IgnorePageObjects)
-                page.PageObject.SetActive(false);
-
-            //set color
-            page.BackgroundToHighlight.color = InactiveColor;
-            if (page.CustomColor)
-                page.BackgroundToHighlight.color = page.InactiveColor;
-        }
-
         private void DeactivateAllPages()
         {
-            foreach (Page page in PageList)
+            foreach (TabSwitchButton page in _tabSwitchElementList)
                 DeactivatePage(page);
         }
 
-        private void OnDestroy()
+        private void DeactivatePage(TabSwitchButton page)
         {
-            foreach (Page page in PageList)
-                page.ButtonForSwitch.onClick.RemoveAllListeners();
+            //deactivate page
+            if (!_ignorePageObjects)
+                page.PageObject.SetActive(false);
+
+            //set color
+            page.IsActive = false;
+            page.SetColorAuto();
         }
 
-    }
+        private void OnValidate()
+        {
+            RefreshEditor();
+        }
 
-    [System.Serializable]
-    public class Page
-    {
-        [SerializeField] private string _name;
-        [SerializeField] private GameObject _pageObject;
+        public void RefreshEditor()
+        {
+            foreach (TabSwitchButton button in _tabSwitchElementList)
+            {
+                button.Setup();
 
-        [Space]
-        [SerializeField] private Button _buttonForSwitch;
+                // Define the Colors
+                button.DefineColors(_tabColors);
+            }
 
-        [Space]
-        [SerializeField] private Image _backgroundToHighlight;
-
-        [Header("Colors")]
-        [SerializeField] private bool _customColor = false;
-        [SerializeField] private Color _activeColor = Color.white;
-        [SerializeField] private Color _inactiveColor = new Color(1f, 1f, 1f, 0.3f);
-
-        [Header("Optional")]
-        public UnityEvent OnTabSwitch;
+            foreach (TabSwitchButton page in _tabSwitchElementList)
+                page.SetColorAuto();
+        }
 
 
-        public string Name { get => _name; }
-        public GameObject PageObject { get => _pageObject; }
-        public Button ButtonForSwitch { get => _buttonForSwitch; }
-        public Image BackgroundToHighlight { get => _backgroundToHighlight; }
 
-        public bool CustomColor { get => _customColor; }
-        public Color ActiveColor { get => _activeColor; }
-        public Color InactiveColor { get => _inactiveColor; }
     }
 }
