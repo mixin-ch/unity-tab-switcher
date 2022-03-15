@@ -1,6 +1,11 @@
-﻿using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
-public class TabSwitchElement : MonoBehaviour
+namespace Mixin
 {
-    public Page Page;
+    public class TabSwitchElement : MonoBehaviour
+    {
+        public Page Page;
+    }
 }
