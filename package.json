@@ -1,0 +1,18 @@
+{
+  "name": "com.mixin.unity-mixin-utils",
+  "version": "1.0.0",
+  "displayName": "Unity Mixin Utils",
+  "description": "This is the official Unity Mixin Utillities Package. It makes our lifes easier.",
+  "unity": "2021.1",
+  "dependencies": {},
+  "keywords": [
+    "Mixin Games",
+    "Utilities",
+    "Helper"
+  ],
+  "author": {
+    "name": "Mixin Games",
+    "email": "public@mixin.ch",
+    "url": "https://mixin.ch"
+  }
+}
