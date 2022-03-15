@@ -1,135 +1,148 @@
 using System;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-public class TabSwitcher : MonoBehaviour
+namespace Mixin
 {
-    [Header("Colors")]
-    public Color ActiveColor = new Color(1f, 1f, 1f, 1f);
-    public Color InactiveColor = new Color(1f, 1f, 1f, 0.7f);
-
-    public bool IgnorePageObjects = false;
-
-    [Space]
-    public List<TabSwitchElement> TabSwitchElementList;
-
-    [Space]
-    public List<Page> PageList;
-
-    // Obsolete
-    public UnityEvent<Page> OnTabSwitch;
-
-    public static event UnityAction<Page> OnTabSwitched;
-
-    [ReadOnly]
-    public Page ActivePage;
- 
-    private void Awake()
+    public class TabSwitcher : MonoBehaviour
     {
-        Setup();
-    }
+        [Header("Colors")]
+        [SerializeField] private Color ActiveColor = Color.white;
+        [SerializeField] private Color InactiveColor = new Color(1f, 1f, 1f, 0.7f);
 
-    private void Setup()
-    {
-        // if he uses the TabSwitchElement, then add these pages to PageList
-        if (TabSwitchElementList != null)
-            foreach (TabSwitchElement tabSwitchElement in TabSwitchElementList)
-                PageList.Add(tabSwitchElement.Page);
+        [SerializeField] private bool IgnorePageObjects = false;
 
-        // check if user wants to use the all in one feature
-        if (PageList != null)
+        [Space]
+        [SerializeField] private List<TabSwitchElement> TabSwitchElementList;
+
+        [Space]
+        private List<Page> PageList;
+
+        // Obsolete
+        public UnityEvent<Page> OnTabSwitch;
+
+        public static event UnityAction<Page> OnTabSwitched;
+
+        //[ReadOnly]
+        private Page ActivePage;
+
+        private void Awake()
+        {
+            Setup();
+        }
+
+        private void Setup()
+        {
+            // if he uses the TabSwitchElement, then add these pages to PageList
+            if (TabSwitchElementList != null)
+                foreach (TabSwitchElement tabSwitchElement in TabSwitchElementList)
+                    PageList.Add(tabSwitchElement.Page);
+
+            // check if user wants to use the all in one feature
+            if (PageList != null)
+            {
+                foreach (Page page in PageList)
+                {
+                    // add button listeners
+                    page.ButtonForSwitch.onClick.AddListener(() =>
+                    {
+                        SwitchToPage(page);
+                    });
+
+                }
+                // activate first page
+                SwitchToPage(PageList[0]);
+            }
+        }
+
+        public void SwitchToPage(Page page)
+        {
+            //if (page == ActivePage)
+            //    return;
+
+            //$"Switching to Page {page.Name}".Log(Color.yellow);
+
+            // disable all pages
+            DeactivateAllPages();
+
+            // activate page
+            if (!IgnorePageObjects)
+                page.PageObject.SetActive(true);
+
+            // set color
+            page.BackgroundToHighlight.color = ActiveColor;
+            if (page.CustomColor)
+                page.BackgroundToHighlight.color = page.ActiveColor;
+
+            // set current active page
+            ActivePage = page;
+
+            // call general on tab switch methods
+            OnTabSwitch?.Invoke(page);
+
+            // Fire Event
+            OnTabSwitched?.Invoke(page);
+
+            // call methods from individual page
+            page.OnTabSwitch?.Invoke();
+        }
+
+        private void DeactivatePage(Page page)
+        {
+            //deactivate page
+            if (!IgnorePageObjects)
+                page.PageObject.SetActive(false);
+
+            //set color
+            page.BackgroundToHighlight.color = InactiveColor;
+            if (page.CustomColor)
+                page.BackgroundToHighlight.color = page.InactiveColor;
+        }
+
+        private void DeactivateAllPages()
         {
             foreach (Page page in PageList)
-            {
-                // add button listeners
-                page.ButtonForSwitch.onClick.AddListener(() =>
-                {
-                    SwitchToPage(page);
-                });
-
-            }
-            // activate first page
-            SwitchToPage(PageList[0]);
+                DeactivatePage(page);
         }
+
+        private void OnDestroy()
+        {
+            foreach (Page page in PageList)
+                page.ButtonForSwitch.onClick.RemoveAllListeners();
+        }
+
     }
 
-    public void SwitchToPage(Page page)
+    [System.Serializable]
+    public class Page
     {
-        //if (page == ActivePage)
-        //    return;
+        [SerializeField] private string _name;
+        [SerializeField] private GameObject _pageObject;
 
-        $"Switching to Page {page.Name}".Log(Color.yellow);
+        [Space]
+        [SerializeField] private Button _buttonForSwitch;
 
-        // disable all pages
-        DeactivateAllPages();
+        [Space]
+        [SerializeField] private Image _backgroundToHighlight;
 
-        // activate page
-        if (!IgnorePageObjects)
-            page.PageObject.SetActive(true);
+        [Header("Colors")]
+        [SerializeField] private bool _customColor = false;
+        [SerializeField] private Color _activeColor = Color.white;
+        [SerializeField] private Color _inactiveColor = new Color(1f, 1f, 1f, 0.3f);
 
-        // set color
-        page.BackgroundToHighlight.color = ActiveColor;
-        if (page.CustomColor)
-            page.BackgroundToHighlight.color = page.ActiveColor;
+        [Header("Optional")]
+        public UnityEvent OnTabSwitch;
 
-        // set current active page
-        ActivePage = page;
 
-        // call general on tab switch methods
-        OnTabSwitch?.Invoke(page);
+        public string Name { get => _name; }
+        public GameObject PageObject { get => _pageObject; }
+        public Button ButtonForSwitch { get => _buttonForSwitch; }
+        public Image BackgroundToHighlight { get => _backgroundToHighlight; }
 
-        // Fire Event
-        OnTabSwitched?.Invoke(page);
-
-        // call methods from individual page
-        page.OnTabSwitch?.Invoke();
+        public bool CustomColor { get => _customColor; }
+        public Color ActiveColor { get => _activeColor; }
+        public Color InactiveColor { get => _inactiveColor; }
     }
-
-    private void DeactivatePage(Page page)
-    {
-        //deactivate page
-        if (!IgnorePageObjects)
-            page.PageObject.SetActive(false);
-
-        //set color
-        page.BackgroundToHighlight.color = InactiveColor;
-        if (page.CustomColor)
-            page.BackgroundToHighlight.color = page.InactiveColor;
-    }
-
-    private void DeactivateAllPages()
-    {
-        foreach (Page page in PageList)
-            DeactivatePage(page);
-    }
-
-    private void OnDestroy()
-    {
-        foreach (Page page in PageList)
-            page.ButtonForSwitch.onClick.RemoveAllListeners();
-    }
-
-}
-
-[System.Serializable]
-public class Page
-{
-    public string Name;
-    public GameObject PageObject;
-    [Space]
-    public Button ButtonForSwitch;
-    [Space]
-    public Image BackgroundToHighlight;
-
-    [Header("Optional")]
-    public UnityEvent OnTabSwitch;
-    //public TMP_Text ButtonText;
-
-    [Header("Colors")]
-    public bool CustomColor = false;
-    public UnityEngine.Color ActiveColor = new UnityEngine.Color(1f, 1f, 1f, 1f);
-    public UnityEngine.Color InactiveColor = new UnityEngine.Color(1f, 1f, 1f, 0.3f);
 }
