@@ -1,14 +1,15 @@
 {
-  "name": "com.mixin.unity-mixin-utils",
+  "name": "com.mixin.unity-tab-switcher",
   "version": "1.0.0",
-  "displayName": "Unity Mixin Utils",
-  "description": "This is the official Unity Mixin Utillities Package. It makes our lifes easier.",
+  "displayName": "Mixin Tab Switcher",
+  "description": "Create easy Tab Switching Pages with this package.",
   "unity": "2021.1",
-  "dependencies": {},
+  "dependencies": {
+    "com.mixin.unity-mixin-utils": "1.0.0"
+  },
   "keywords": [
     "Mixin Games",
-    "Utilities",
-    "Helper"
+    "Tab Switcher"
   ],
   "author": {
     "name": "Mixin Games",
