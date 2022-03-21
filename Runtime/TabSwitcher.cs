@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -15,7 +16,7 @@ namespace Mixin
         [SerializeField] private bool _ignorePageObjects = false;
         [SerializeField] private TabColors _tabColors;
 
-        public UnityEvent<TabSwitchButton> OnTabSwitched;
+        public static event Action<TabSwitchButton> OnAnyTabSwitched;
 
         [Header("Optional")]
         [SerializeField] private List<TabSwitchButton> _tabSwitchElementList;
@@ -23,6 +24,10 @@ namespace Mixin
         private TabSwitchButton _activePage;
 
         public TabSwitchButton ActivePage { get => _activePage; }
+
+        /*TEST*/
+        private int _activePageInt;
+        /*TEST*/
 
 
         private void Awake()
@@ -96,7 +101,7 @@ namespace Mixin
             page.SetColorAuto();
 
             // Fire Event
-            OnTabSwitched?.Invoke(page);
+            OnAnyTabSwitched?.Invoke(page);
 
             // call methods from individual page
             page.OnTabSwitch?.Invoke();
@@ -126,6 +131,8 @@ namespace Mixin
 
         public void RefreshEditor()
         {
+            SwitchToPage(_tabSwitchElementList[_activePageInt]);
+
             foreach (TabSwitchButton button in _tabSwitchElementList)
             {
                 button.Setup();
@@ -139,6 +146,41 @@ namespace Mixin
         }
 
 
+        /******TEST*/
+        [CustomEditor(typeof(TabSwitcher))]
+        [ExecuteInEditMode]
+        public class TabSwitcherEditor : Editor
+        {
+            public override void OnInspectorGUI()
+            {
+                EditorGUI.BeginChangeCheck();
 
+                TabSwitcher tabSwitcher = (TabSwitcher)target;
+
+                List<string> options = new List<string>();
+                foreach (TabSwitchButton button in tabSwitcher._tabSwitchElementList)
+                {
+                    options.Add(button.name);
+                }
+
+                EditorGUILayout.BeginHorizontal();
+                tabSwitcher._activePageInt = EditorGUILayout.Popup(
+                    "Active Page",
+                    tabSwitcher._activePageInt,
+                    options.ToArray()
+                );
+                EditorGUILayout.EndHorizontal();
+
+
+                base.OnInspectorGUI();
+
+                // Handle Realtime Changes
+                if (EditorGUI.EndChangeCheck())
+                    tabSwitcher.RefreshEditor();
+            }
+        }
     }
+
+
+
 }

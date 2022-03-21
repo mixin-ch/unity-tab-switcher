@@ -48,7 +48,6 @@ namespace Mixin
 
             if (_buttonBackground == null)
                 _buttonBackground = GetComponent<Image>();
-
         }
 
         public void DefineColors(TabColors parentColors)
