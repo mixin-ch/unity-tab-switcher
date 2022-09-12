@@ -970,7 +970,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _autoInit: 1
   _autoAddButtons: 1
-  _allowClickActivePage: 1
+  _allowClickActivePage: 0
   _ignorePageObjects: 0
   _tabColors:
     _activeColor: {r: 0.03137254, g: 0.7921569, b: 0.06408081, a: 1}
