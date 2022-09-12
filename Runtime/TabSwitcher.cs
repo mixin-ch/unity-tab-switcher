@@ -9,16 +9,31 @@ namespace Mixin
     [ExecuteInEditMode]
     public class TabSwitcher : MonoBehaviour
     {
+        [Tooltip("This will setup everything on awake.")]
         [SerializeField] private bool _autoInit = true;
+
+        [Tooltip("Automatically add all buttons to the array when scene starts.")]
         [SerializeField] private bool _autoAddButtons = true;
+
+        [Tooltip("Lets the user invoke a click on the page that he currently is.")]
         [SerializeField] private bool _allowClickActivePage = true;
+
+        [Tooltip("When enabled it will not change the page but still invokes a click. " +
+            "This is useful for dynamic content.")]
         [SerializeField] private bool _ignorePageObjects = false;
+
+        [Tooltip("The colors of all tabs (does not overwrite the button's custom color)")]
         [SerializeField] private TabColors _tabColors;
 
-        public UnityEvent<TabSwitchButton> OnTabSwitched;
+        [Tooltip("Event when the tab is switched")]
+        public UnityEvent<TabSwitchButton> OnAnyTabSwitched;
 
         [Header("Optional")]
-        [SerializeField] private List<TabSwitchButton> _tabSwitchElementList;
+        [Tooltip("List of all buttons. Fill this manually if you disabled 'AutoAddButtons'.")]
+        [SerializeField] private List<TabSwitchButton> _tabSwitchButtonList;
+
+        [Tooltip("The page it should show when the game starts")]
+        [SerializeField] private TabSwitchButton _defaultActivePage;
 
         private TabSwitchButton _activePage;
 
@@ -37,23 +52,23 @@ namespace Mixin
         {
             if (_autoAddButtons)
             {
-                _tabSwitchElementList.Clear();
+                _tabSwitchButtonList.Clear();
 
                 TabSwitchButton[] foundButtons = transform.GetComponentsInChildren<TabSwitchButton>();
                 foreach (TabSwitchButton button in foundButtons)
                 {
-                    _tabSwitchElementList.Add(button);
+                    _tabSwitchButtonList.Add(button);
                 }
             }
 
             // If there are no Buttons, then return
-            if (_tabSwitchElementList.Count == 0)
+            if (_tabSwitchButtonList.Count == 0)
             {
                 "Setup failed: No Tab Switch Element added".Log();
                 return;
             }
 
-            foreach (TabSwitchButton button in _tabSwitchElementList)
+            foreach (TabSwitchButton button in _tabSwitchButtonList)
             {
                 button.Setup();
 
@@ -67,8 +82,9 @@ namespace Mixin
                 button.DefineColors(_tabColors);
             }
 
-            // activate first page
-            SwitchToPage(_tabSwitchElementList[0]);
+            // switch to the default page
+            // if default is not set, it takes the first button
+            SwitchToPage(_defaultActivePage ?? _tabSwitchButtonList[0]);
 
         }
 
@@ -96,15 +112,15 @@ namespace Mixin
             page.SetColorAuto();
 
             // Fire Event
-            OnTabSwitched?.Invoke(page);
+            OnAnyTabSwitched?.Invoke(page);
 
             // call methods from individual page
-            page.OnTabSwitch?.Invoke();
+            page.OnThisTabSwitched?.Invoke();
         }
 
         private void DeactivateAllPages()
         {
-            foreach (TabSwitchButton page in _tabSwitchElementList)
+            foreach (TabSwitchButton page in _tabSwitchButtonList)
                 DeactivatePage(page);
         }
 
@@ -126,7 +142,9 @@ namespace Mixin
 
         public void RefreshEditor()
         {
-            foreach (TabSwitchButton button in _tabSwitchElementList)
+            Setup();
+
+            /*foreach (TabSwitchButton button in _tabSwitchButtonList)
             {
                 button.Setup();
 
@@ -134,8 +152,8 @@ namespace Mixin
                 button.DefineColors(_tabColors);
             }
 
-            foreach (TabSwitchButton page in _tabSwitchElementList)
-                page.SetColorAuto();
+            foreach (TabSwitchButton page in _tabSwitchButtonList)
+                page.SetColorAuto();*/
         }
 
 
