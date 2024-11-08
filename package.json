@@ -5,7 +5,7 @@
   "description": "Create easy Tab Switching Pages with this package.",
   "unity": "2021.1",
   "dependencies": {
-    "com.mixin.unity-utils": "1.0.0"
+    "com.mixin.unity-mixin-utils": "1.0.0"
   },
   "keywords": [
     "Mixin Games",
