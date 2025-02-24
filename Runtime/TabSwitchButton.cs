@@ -206,7 +206,7 @@ namespace Mixin.UI
         /// </summary>
         private void OnValidate()
         {
-            _tabSwitcher.RefreshEditor();
+            //_tabSwitcher.RefreshEditor();
         }
     }
 }

@@ -1,6 +1,6 @@
 {
   "name": "com.mixin.unity-tab-switcher",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Mixin Tab Switcher",
   "description": "Create easy Tab Switching Pages with this package.",
   "unity": "2021.1",
